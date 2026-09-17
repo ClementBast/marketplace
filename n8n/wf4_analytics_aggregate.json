@@ -1,9 +1,5 @@
 {
   "name": "marketplace_analytics_aggregate_daily",
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
   "nodes": [
     {
       "parameters": {
@@ -22,13 +18,19 @@
         "query": "={{ $('Appele par wf2').item.json.upsert_summary }}",
         "options": {}
       },
-      "id": "w4-pg-summary",
+      "id": "d56ce8bd-f999-43e8-94e8-7f4a66fc2b29",
       "name": "Refresh daily_summary",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "position": [20, 300],
+      "position": [
+        224,
+        0
+      ],
       "credentials": {
-        "postgres": { "id": "", "name": "Postgres DWH" }
+        "postgres": {
+          "id": "NcxYzwC2SQ1rNqMp",
+          "name": "Postgres account"
+        }
       }
     },
     {
@@ -37,13 +39,19 @@
         "query": "={{ $('Appele par wf2').item.json.upsert_seller_daily }}",
         "options": {}
       },
-      "id": "w4-pg-seller-daily",
+      "id": "4c7f5bea-6af3-4fba-a5ff-358cc7148289",
       "name": "Refresh seller_daily",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "position": [240, 300],
+      "position": [
+        240,
+        176
+      ],
       "credentials": {
-        "postgres": { "id": "", "name": "Postgres DWH" }
+        "postgres": {
+          "id": "NcxYzwC2SQ1rNqMp",
+          "name": "Postgres account"
+        }
       }
     },
     {
@@ -52,19 +60,79 @@
         "query": "={{ $('Appele par wf2').item.json.upsert_category_daily }}",
         "options": {}
       },
-      "id": "w4-pg-cat-daily",
+      "id": "fcd62668-7752-45d0-ba81-eb346956cb1c",
       "name": "Refresh category_daily",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "position": [460, 300],
+      "position": [
+        224,
+        -192
+      ],
       "credentials": {
-        "postgres": { "id": "", "name": "Postgres DWH" }
+        "postgres": {
+          "id": "NcxYzwC2SQ1rNqMp",
+          "name": "Postgres account"
+        }
       }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7b82bfcc-21ef-47e9-84a8-d9b56119f608",
+      "name": "When Executed by Another Workflow"
     }
   ],
+  "pinData": {},
   "connections": {
-    "Appele par wf2": { "main": [[{ "node": "Refresh daily_summary", "type": "main", "index": 0 }]] },
-    "Refresh daily_summary": { "main": [[{ "node": "Refresh seller_daily", "type": "main", "index": 0 }]] },
-    "Refresh seller_daily": { "main": [[{ "node": "Refresh category_daily", "type": "main", "index": 0 }]] }
-  }
+    "Refresh daily_summary": {
+      "main": [
+        []
+      ]
+    },
+    "Refresh seller_daily": {
+      "main": [
+        []
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Refresh daily_summary",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Refresh seller_daily",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Refresh category_daily",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "04dd927d-21d4-4322-af7b-6e347e26e435",
+  "meta": {
+    "instanceId": "b03cdbd5bec838b821e322e040c2698af5d12bc1c167184a9e79b10750132970"
+  },
+  "nodeGroups": [],
+  "id": "1sVkJTWWlk7fAG3s",
+  "tags": []
 }

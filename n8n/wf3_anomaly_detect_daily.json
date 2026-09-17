@@ -1,23 +1,23 @@
 {
   "name": "marketplace_anomaly_detect_daily",
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
   "nodes": [
     {
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "days" }
+            {}
           ]
         }
       },
-      "id": "w3-trigger",
+      "id": "c3873802-2a09-4739-b091-2d52bb6eb1e3",
       "name": "Schedule quotidien",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [-200, 300]
+      "position": [
+        -656,
+        112
+      ],
+      "disabled": true
     },
     {
       "parameters": {
@@ -25,13 +25,19 @@
         "query": "WITH last_day AS (SELECT max(dt) AS dt FROM analytics.daily_summary), moy AS (SELECT AVG(total_revenue) AS avg7 FROM analytics.daily_summary WHERE dt >= (SELECT dt FROM last_day) - 7 AND dt < (SELECT dt FROM last_day)) SELECT s.dt, s.total_revenue, ROUND(moy.avg7, 2) AS avg7, ROUND(s.total_revenue / NULLIF(moy.avg7, 0), 3) AS ratio FROM analytics.daily_summary s, moy, last_day l WHERE s.dt = l.dt;",
         "options": {}
       },
-      "id": "w3-pg-ratio",
+      "id": "665acc61-1c3f-48b4-abe0-a3c2db887d1b",
       "name": "CA vs moyenne 7j",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "position": [20, 300],
+      "position": [
+        -448,
+        112
+      ],
       "credentials": {
-        "postgres": { "id": "", "name": "Postgres DWH" }
+        "postgres": {
+          "id": "NcxYzwC2SQ1rNqMp",
+          "name": "Postgres account"
+        }
       },
       "notes": "ratio = CA du dernier jour / moyenne mobile des 7 jours precedents."
     },
@@ -41,16 +47,27 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "loose"
+            "typeValidation": "strict",
+            "version": 1
           },
           "conditions": [
             {
               "id": "cond-ratio",
-              "leftValue": "={{ $json.ratio }}",
+              "leftValue": "={{ $json.ratio.toNumber() }}",
               "rightValue": 0.7,
               "operator": {
                 "type": "number",
                 "operation": "lt"
+              }
+            },
+            {
+              "id": "1998ac6d-d5d5-4507-99fe-0b9c7504ecd4",
+              "leftValue": "={{ $json.ratio }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
               }
             }
           ],
@@ -58,45 +75,102 @@
         },
         "options": {}
       },
-      "id": "w3-if",
+      "id": "569cae44-3538-442d-9ac2-8f38eb30ae13",
       "name": "CA < 70% moyenne ?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        -224,
+        112
+      ],
       "notes": "US-05 : alerte si le CA du jour < 70% de la moyenne sur 7 jours."
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "=INSERT INTO analytics.alerts (dt, alert_type, message) VALUES ('{{ $('CA vs moyenne 7j').item.json.dt }}', 'CA_DROP', 'CA {{ $('CA vs moyenne 7j').item.json.total_revenue }} EUR = {{ $('CA vs moyenne 7j').item.json.ratio }} x moyenne 7j ({{ $('CA vs moyenne 7j').item.json.avg7 }} EUR)');",
+        "query": "INSERT INTO analytics.alerts (dt, alert_type, message)\nVALUES (\n  '{{ $json.dt.toDateTime().toFormat(\"yyyy-MM-dd\") }}',\n  'CA_DROP',\n  'CA {{ $json.total_revenue }} EUR = {{ $json.ratio }} x moyenne 7j ({{ $json.avg7 }} EUR)'\n);",
         "options": {}
       },
-      "id": "w3-pg-alert",
+      "id": "73a8e1d9-1d40-4cc0-998c-73633003afc1",
       "name": "Enregistrer alerte",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "position": [460, 200],
+      "position": [
+        0,
+        0
+      ],
       "credentials": {
-        "postgres": { "id": "", "name": "Postgres DWH" }
+        "postgres": {
+          "id": "NcxYzwC2SQ1rNqMp",
+          "name": "Postgres account"
+        }
       }
     },
     {
       "parameters": {},
-      "id": "w3-noop",
+      "id": "5d0ba26c-d889-4508-8110-0ac48d41a78a",
       "name": "RAS",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [460, 400]
-    }
-  ],
-  "connections": {
-    "Schedule quotidien": { "main": [[{ "node": "CA vs moyenne 7j", "type": "main", "index": 0 }]] },
-    "CA vs moyenne 7j": { "main": [[{ "node": "CA < 70% moyenne ?", "type": "main", "index": 0 }]] },
-    "CA < 70% moyenne ?": {
-      "main": [
-        [{ "node": "Enregistrer alerte", "type": "main", "index": 0 }],
-        [{ "node": "RAS", "type": "main", "index": 0 }]
+      "position": [
+        0,
+        208
       ]
     }
-  }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule quotidien": {
+      "main": [
+        [
+          {
+            "node": "CA vs moyenne 7j",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CA vs moyenne 7j": {
+      "main": [
+        [
+          {
+            "node": "CA < 70% moyenne ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CA < 70% moyenne ?": {
+      "main": [
+        [
+          {
+            "node": "Enregistrer alerte",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RAS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4b8ebd44-29fe-4369-b67e-934182f09ddf",
+  "meta": {
+    "instanceId": "b03cdbd5bec838b821e322e040c2698af5d12bc1c167184a9e79b10750132970"
+  },
+  "nodeGroups": [],
+  "id": "SWRTbGgNTHUDPIlB",
+  "tags": []
 }

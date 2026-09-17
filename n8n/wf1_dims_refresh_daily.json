@@ -1,23 +1,22 @@
 {
   "name": "marketplace_dims_refresh_daily",
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
   "nodes": [
     {
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "days" }
+            {}
           ]
         }
       },
-      "id": "w1-trigger",
+      "id": "6ecbd3d0-f07f-47a4-90de-cac980c18cd0",
       "name": "Schedule quotidien",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [-200, 300]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "parameters": {
@@ -26,40 +25,53 @@
         "genericAuthType": "httpHeaderAuth",
         "options": {}
       },
-      "id": "w1-http-sellers",
+      "id": "206d3a68-4166-406f-8d96-3f8ea6c37a91",
       "name": "GET sellers",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [20, 300],
+      "position": [
+        224,
+        0
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "", "name": "Marketplace API" }
+        "httpHeaderAuth": {
+          "id": "uSp7iWKkXsxgafK4",
+          "name": "Header Auth account"
+        }
       }
     },
     {
       "parameters": {
-        "mode": "runOnceForAllItems",
-        "language": "javaScript",
         "jsCode": "const sellers = $input.all()[0].json.sellers || [];\nconst esc = v => String(v).replace(/'/g, \"''\");\nconst vals = sellers.map(s => `('${s.seller_id}','${esc(s.name)}','${s.country}','${esc(s.city)}','${s.joined_date}',${s.rating})`);\nconst query = `INSERT INTO dwh.dim_seller (seller_id, name, country, city, joined_date, rating) VALUES ${vals.join(',')} ON CONFLICT (seller_id) DO UPDATE SET name=EXCLUDED.name, country=EXCLUDED.country, city=EXCLUDED.city, joined_date=EXCLUDED.joined_date, rating=EXCLUDED.rating;`;\nreturn [{ json: { query, nb_sellers: sellers.length } }];"
       },
-      "id": "w1-prep-sellers",
+      "id": "a7b0a142-432a-48ca-b754-18fa7f462e7a",
       "name": "Preparer dim_seller",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [240, 300]
+      "position": [
+        448,
+        0
+      ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "={{ $('Preparer dim_seller').item.json.query }}",
+        "query": "{{ $('Preparer dim_seller').item.json.query }}",
         "options": {}
       },
-      "id": "w1-pg-sellers",
+      "id": "449ce5e0-ab77-42b1-9bbb-42c9d6442e61",
       "name": "Upsert dim_seller",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "position": [460, 300],
+      "position": [
+        672,
+        0
+      ],
       "credentials": {
-        "postgres": { "id": "", "name": "Postgres DWH" }
+        "postgres": {
+          "id": "NcxYzwC2SQ1rNqMp",
+          "name": "Postgres account"
+        }
       }
     },
     {
@@ -69,13 +81,19 @@
         "genericAuthType": "httpHeaderAuth",
         "options": {}
       },
-      "id": "w1-http-products",
+      "id": "5469f63f-be03-4308-bd00-c594700aa972",
       "name": "GET products",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [680, 300],
+      "position": [
+        880,
+        0
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "", "name": "Marketplace API" }
+        "httpHeaderAuth": {
+          "id": "uSp7iWKkXsxgafK4",
+          "name": "Header Auth account"
+        }
       }
     },
     {
@@ -84,34 +102,116 @@
         "language": "javaScript",
         "jsCode": "const products = $input.all()[0].json.products || [];\nconst esc = v => String(v).replace(/'/g, \"''\");\nconst CHUNK = 2000;\nconst out = [];\nfor (let i = 0; i < products.length; i += CHUNK) {\n  const vals = products.slice(i, i + CHUNK).map(p => `('${p.product_id}','${esc(p.name)}','${esc(p.category)}',${p.price},'${p.seller_id}')`);\n  out.push({ json: { query: `INSERT INTO dwh.dim_product (product_id, name, category, price, seller_id) VALUES ${vals.join(',')} ON CONFLICT (product_id) DO UPDATE SET name=EXCLUDED.name, category=EXCLUDED.category, price=EXCLUDED.price, seller_id=EXCLUDED.seller_id;`, chunk: (i / CHUNK) + 1 } });\n}\nreturn out;"
       },
-      "id": "w1-prep-products",
+      "id": "9fb4a425-8a47-4af0-9357-ea3b385b8048",
       "name": "Preparer dim_product",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [900, 300]
+      "position": [
+        1104,
+        0
+      ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "={{ $('Preparer dim_product').item.json.query }}",
+        "query": "{{ $('Preparer dim_product').item.json.query }}",
         "options": {}
       },
-      "id": "w1-pg-products",
+      "id": "2a7abd3c-1336-4d1a-84a6-48d04165dded",
       "name": "Upsert dim_product",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "position": [1120, 300],
+      "position": [
+        1328,
+        0
+      ],
       "credentials": {
-        "postgres": { "id": "", "name": "Postgres DWH" }
+        "postgres": {
+          "id": "NcxYzwC2SQ1rNqMp",
+          "name": "Postgres account"
+        }
       }
     }
   ],
+  "pinData": {},
   "connections": {
-    "Schedule quotidien": { "main": [[{ "node": "GET sellers", "type": "main", "index": 0 }]] },
-    "GET sellers": { "main": [[{ "node": "Preparer dim_seller", "type": "main", "index": 0 }]] },
-    "Preparer dim_seller": { "main": [[{ "node": "Upsert dim_seller", "type": "main", "index": 0 }]] },
-    "Upsert dim_seller": { "main": [[{ "node": "GET products", "type": "main", "index": 0 }]] },
-    "GET products": { "main": [[{ "node": "Preparer dim_product", "type": "main", "index": 0 }]] },
-    "Preparer dim_product": { "main": [[{ "node": "Upsert dim_product", "type": "main", "index": 0 }]] }
-  }
+    "Schedule quotidien": {
+      "main": [
+        [
+          {
+            "node": "GET sellers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET sellers": {
+      "main": [
+        [
+          {
+            "node": "Preparer dim_seller",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparer dim_seller": {
+      "main": [
+        [
+          {
+            "node": "Upsert dim_seller",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert dim_seller": {
+      "main": [
+        [
+          {
+            "node": "GET products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET products": {
+      "main": [
+        [
+          {
+            "node": "Preparer dim_product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparer dim_product": {
+      "main": [
+        [
+          {
+            "node": "Upsert dim_product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3602c481-6fbf-4457-97b4-36caa4d2d7bc",
+  "meta": {
+    "instanceId": "b03cdbd5bec838b821e322e040c2698af5d12bc1c167184a9e79b10750132970"
+  },
+  "nodeGroups": [],
+  "id": "CxReIlybpDUxYM03",
+  "tags": []
 }

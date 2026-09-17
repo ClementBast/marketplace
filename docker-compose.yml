@@ -72,7 +72,7 @@ services:
 
   # BI / dashboards
   metabase:
-    image: metabase/metabase:v0.59.6.1
+    image: metabase/metabase:latest
     container_name: mp_metabase
     ports:
       - "3000:3000"
