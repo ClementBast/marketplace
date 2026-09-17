@@ -3,17 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "inputSource": "passthrough"
-      },
-      "id": "w4-trigger",
-      "name": "Appele par wf2",
-      "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1.1,
-      "position": [-200, 300],
-      "notes": "Declenche par le noeud 'Agreger analytics' de wf2 (equivalent de l'asset-scheduling Airflow : se lance apres le load des faits). Recoit en entree les champs upsert_* construits par le noeud 'Preparer' de wf2."
-    },
-    {
-      "parameters": {
         "operation": "executeQuery",
         "query": "={{ $('Appele par wf2').item.json.upsert_summary }}",
         "options": {}
