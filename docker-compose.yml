@@ -13,9 +13,9 @@ services:
     image: postgres:17
     container_name: mp_postgres_dwh
     environment:
-      POSTGRES_USER: dwh_user
-      POSTGRES_PASSWORD: dwh_password
-      POSTGRES_DB: dwh
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5433:5432"   # 5433 sur l'hote, 5432 en interne
     volumes:
@@ -29,8 +29,8 @@ services:
     image: quay.io/minio/minio:latest
     container_name: mp_minio
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     ports:
       - "9000:9000"   # API S3 (si conflit tp1 ClickHouse : passer en 9010:9000)
       - "9001:9001"   # Console web
@@ -49,7 +49,7 @@ services:
     entrypoint: >
       /bin/sh -c "
       sleep 5;
-      mc alias set local http://minio:9000 minioadmin minioadmin123;
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
       mc mb --ignore-existing local/data-lake;
       "
     networks:

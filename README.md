@@ -71,9 +71,13 @@ marketplace/
 
 ```bash
 cd marketplace
+cp .env.example .env      # credentials Postgres/MinIO (valeurs de demo)
 docker compose up -d --build
 docker compose ps        # attendre que tout soit "Up" (~60s pour metabase)
 ```
+
+> Les secrets ne sont plus en dur dans `docker-compose.yml` : ils sont lus
+> depuis `.env` (gitignoré). `.env.example` sert de template.
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
