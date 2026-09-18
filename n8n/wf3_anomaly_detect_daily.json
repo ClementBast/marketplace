@@ -116,6 +116,28 @@
         0,
         208
       ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO analytics.alerts (dt, alert_type, message)\nSELECT x.dt, x.alert_type, x.message FROM (\n  SELECT l.dt, 'FRAUD_CANCEL' AS alert_type,\n    'Vendeur ' || f.seller_id || ' : ' ||\n    ROUND(100.0 * COUNT(*) FILTER (WHERE f.status = 'cancelled') / COUNT(*), 1) ||\n    '% annulations (' || COUNT(*) || ' commandes)' AS message\n  FROM dwh.fact_orders f, (SELECT max(dt) AS dt FROM dwh.fact_orders) l\n  WHERE f.dt = l.dt\n  GROUP BY l.dt, f.seller_id\n  HAVING COUNT(*) >= 3\n     AND 100.0 * COUNT(*) FILTER (WHERE f.status = 'cancelled') / COUNT(*) > 25\n  UNION ALL\n  SELECT l.dt, 'FRAUD_PRICE',\n    'Vendeur ' || f.seller_id || ' : ' || COUNT(*) || ' commandes a plus de 15% d''ecart avec le prix catalogue'\n  FROM dwh.fact_orders f\n  JOIN dwh.dim_product p ON p.product_id = f.product_id,\n       (SELECT max(dt) AS dt FROM dwh.fact_orders) l\n  WHERE f.dt = l.dt\n    AND ABS(f.unit_price - p.price) / p.price > 0.15\n  GROUP BY l.dt, f.seller_id\n) x\nWHERE NOT EXISTS (\n  SELECT 1 FROM analytics.alerts a\n  WHERE a.dt = x.dt AND a.alert_type = x.alert_type AND a.message = x.message\n);",
+        "options": {}
+      },
+      "id": "w3-fraud-detect",
+      "name": "Detecter fraude",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -448,
+        336
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "NcxYzwC2SQ1rNqMp",
+          "name": "Postgres account"
+        }
+      },
+      "notes": "Detection fraude automatique : vendeurs a >25% d'annulations (min 3 cmd) ou commandes a >15% d'ecart vs prix catalogue. INSERT idempotent (NOT EXISTS) : rejouer ne duplique pas les alertes."
     }
   ],
   "pinData": {},
@@ -125,6 +147,11 @@
         [
           {
             "node": "CA vs moyenne 7j",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Detecter fraude",
             "type": "main",
             "index": 0
           }

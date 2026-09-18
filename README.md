@@ -57,7 +57,7 @@ marketplace/
 ├── n8n/
 │   ├── wf1_dims_refresh_daily.json    # upsert dim_seller + dim_product
 │   ├── wf2_orders_ingest_daily.json   # pipeline principal extract→raw→staging→dwh
-│   ├── wf3_anomaly_detect_daily.json  # bonus : alerte si CA < 70% moyenne 7j
+│   ├── wf3_anomaly_detect_daily.json  # bonus : alerte CA < 70% moyenne 7j + detection fraude
 │   └── wf4_analytics_aggregate.json   # agrégats analytics (appelé par wf2)
 ├── scripts/
 │   ├── verifier.sh         # vérifs services + idempotence
@@ -268,6 +268,11 @@ erDiagram
   de prix gonflés (x1,6-2,5) et 5 vendeurs à ~60 % d'annulations. Détectable
   via `fact_orders.unit_price` vs `dim_product.price` et le taux de
   `cancelled` par vendeur — cf. dashboard "Fraude potentielle".
+- **Détection fraude automatique** (wf3, nœud `Detecter fraude`) : chaque jour,
+  insère dans `analytics.alerts` les vendeurs à > 25 % d'annulations (min. 3
+  commandes) et ceux ayant des commandes à > 15 % d'écart avec le prix
+  catalogue (`FRAUD_CANCEL` / `FRAUD_PRICE`). L'INSERT est idempotent
+  (`NOT EXISTS`) — rejouer wf3 ne duplique pas les alertes.
 
 ## Pièges connus (retours TP6 + énoncé)
 
